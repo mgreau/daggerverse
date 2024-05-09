@@ -1,0 +1,10 @@
+{
+  "name": "elasticsearch",
+  "sdk": "python",
+  "source": "dagger",
+  "exclude": [
+    "dagger/sdk",
+    "dagger/.venv"
+  ],
+  "engineVersion": "v0.11.3"
+}
