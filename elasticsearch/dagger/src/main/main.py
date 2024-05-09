@@ -1,5 +1,5 @@
 
-"""A dagger module to use Elasticsearch
+"""An Elasticsearch module designed for development and CI purposes only.
 
 
 """
@@ -41,7 +41,7 @@ class Elasticsearch:
 
     @function
     async def service(self, port: int = 9200) -> dagger.Service:
-        """Get an Elasticsearch service in dev mode by default (authentication and encryption disabled) and return the container object"""
+        """Create an Elasticsearch service in dev mode by default"""
 
         return self.ctr.with_exposed_port(port).as_service()
 
@@ -62,7 +62,7 @@ class Elasticsearch:
 
     @function
     async def delete(self, index: str = "", port: int = 9200) -> str:
-        """Sends a DELETE request to the ES service and returns the response."""
+        """Delete an Elasticsearch index."""
 
         es_service = await self.service(port)
         async with managed_service(es_service) as es_service:
@@ -71,7 +71,7 @@ class Elasticsearch:
 
     @function
     async def index_data(self, data: dagger.File, index: str = "my-index", port: int = 9200) -> str:
-        """Index documents from a file to Elasticsearch."""
+        """Index a document from a file into Elasticsearch."""
 
         es_service = await self.service(port)
         async with managed_service(es_service) as es_service:
@@ -92,7 +92,13 @@ class Elasticsearch:
 
     @function
     async def index_bulk_data(self, data: dagger.File, port: int = 9200) -> str:
-        """Index documents to Elasticsearch using the bulk API."""
+        """Index documents into Elasticsearch with the bulk API.
+
+        The data file should be in a format that is compatible with the Elasticsearch bulk API.
+
+        Doc: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html#docs-bulk
+        
+        """
 
         es_service = await self.service(port)
         async with managed_service(es_service) as es_service:
@@ -114,7 +120,7 @@ class Elasticsearch:
 
     @function
     async def full_text_search(self, index: str = "", field: str = "" , query: str = "", port: int = 9200) -> str:
-        """Sends a POST request to the ES service and returns the response."""
+        """Returns search hits that match the query defined in the request."""
 
         es_service = await self.service(port)
         async with managed_service(es_service) as es_service:
