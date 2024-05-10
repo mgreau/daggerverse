@@ -119,7 +119,7 @@ class Elasticsearch:
            return resp
 
     @function
-    async def full_text_search(self, index: str = "", field: str = "" , query: str = "", port: int = 9200) -> str:
+    async def search(self, index: str = "", field: str = "" , query: str = "", port: int = 9200) -> str:
         """Returns search hits that match the query defined in the request."""
 
         es_service = await self.service(port)

@@ -18,7 +18,7 @@ dagger call index-bulk-data --data ./datasets/movies_bulk.json
 
 Search
 ```sh
-dagger call full-text-search --index="movies" --field="title" --query="Inception"
+dagger call search --index="movies" --field="title" --query="Inception"
 
 {
   "took" : 48,
@@ -58,7 +58,7 @@ dagger call full-text-search --index="movies" --field="title" --query="Inception
 **List of useful commands**
 ```sh
 dagger call index-bulk-data --data ./datasets/blogs_bulk.json
-dagger call full-text-search --index="blogs" --field="title" --query="Elastic"
+dagger call search --index="blogs" --field="title" --query="Elastic"
 ```
 
 ```sh
