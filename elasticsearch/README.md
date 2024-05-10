@@ -9,6 +9,10 @@ An Elasticsearch dagger module.
 
 ## Examples
 
+### semantic search
+
+
+
 ### full text search
 
 Index a list of movies into a `movies` index

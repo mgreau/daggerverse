@@ -60,7 +60,6 @@ class Elasticsearch:
     @function
     def service(self) -> dagger.Service:
         """Create an Elasticsearch service in dev mode by default"""
-
         return self.ctr.with_exposed_port(self.port).as_service()
 
 
@@ -70,12 +69,7 @@ class Elasticsearch:
 
             dagger call --version 8.13.2 get --path="_cat/indices?v"
         """
-
-        if (self.mode == "dev"):
-            # see https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-update-settings.html#indices-update-settings
-            no_replica_query = json.dumps({"index": {"number_of_replicas": "0"}})
-            await self._curl("-s","-X", "PUT", f"{self.host}/_all/_settings?pretty","-H", "Content-Type: application/json", "-d", no_replica_query).stdout()
-
+        await self.set_replica("_all")
         return await self._curl("-s", f"{self.host}/{path}").stdout()
 
     @function
@@ -84,16 +78,15 @@ class Elasticsearch:
 
          example: dagger call delete --index="movies"
         """
-
         return await self._curl("-s","-X", "DELETE", f"{self.host}/{index}").stdout()
 
     @function
     async def index_data(self,data: dagger.File, index: str = "my-index") -> str:
         """Index documents into Elasticsearch.
 
-           exampple: dagger call index-data --index="movies" --data ./datasets/movies.json
+           example: dagger call index-data --index="movies" --data ./datasets/movies.json
 
-           It automatically formats the JSON data into the ES bulk format.
+           Automatically formats the JSON data into the ES bulk format.
            Doc: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html#docs-bulk
         
         """
@@ -107,11 +100,7 @@ class Elasticsearch:
             .with_exec(["-X", "POST",f"{self.host}/_bulk?pretty", "-H", "Content-Type: application/json", "--data-binary", "@data.json"])
             .stdout()
         )
-        if (self.mode == "dev"):
-            # see https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-update-settings.html#indices-update-settings
-            no_replica_query = json.dumps({"index": {"number_of_replicas": "0"}})
-            await self._curl("-s","-X", "PUT", f"{self.host}/{index}/_settings?pretty","-H", "Content-Type: application/json", "-d", no_replica_query).stdout()
-
+        await self.set_replica(index)
         return resp
 
     @function
@@ -126,4 +115,73 @@ class Elasticsearch:
                 self._curl("-X", "POST",f"{self.host}/{index}/_search?pretty", "-H", "Content-Type: application/json", "-d", es_query_string)
                 .stdout()
         )
+    
+    @function
+    async def semantic_search_index_data(self, data: dagger.File, index: str = "my-index", rank_field: str = "content") -> str:
+        """Index documents into Elasticsearch for semantic search.
+        
+        """
+        # Make the JSON content compatible with the Elasticsearch bulk format
+        operations = self.format_data_for_bulk_indexing(json.loads(await data.contents()), index)
 
+        resp = await (
+            self.curl
+            .with_service_binding("es", self.service())
+            .with_new_file("/data.json", contents=operations).with_workdir("/")
+            .with_exec(["-X", "POST",f"{self.host}/_bulk?pretty", "-H", "Content-Type: application/json", "--data-binary", "@data.json"])
+            .stdout()
+        )
+        await self.set_replica(index)
+
+        return resp
+
+    async def set_replica(self, index):
+        if (self.mode == "dev"):
+            # see https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-update-settings.html#indices-update-settings
+            no_replica_query = json.dumps({"index": {"number_of_replicas": "0"}})
+            await self._curl("-s","-X", "PUT", f"{self.host}/{index}/_settings?pretty","-H", "Content-Type: application/json", "-d", no_replica_query).stdout()
+
+
+
+
+    @function
+    async def semantic_search(self, index: str = "", field: str = "" , query: str = "") -> str:
+        """Elastic Learned Sparse EncodeR - or ELSER - is an NLP model trained by Elastic that enables you to perform semantic search by using sparse vector representation. 
+        Instead of literal matching on search terms, semantic search retrieves results based on the intent and the contextual meaning of a search query.
+
+        Documentation: https://www.elastic.co/guide/en/elasticsearch/reference/8.13/semantic-search-elser.html
+        """
+
+        return await (
+            self._curl("-X", "POST",f"{self.host}/{index}/_search?pretty", "-H", "Content-Type: application/json", "-d", self.q_text_expansion(field, query))
+            .stdout()
+        )
+
+    def q_vector_field(self, field: str = "" , query: str = ""):
+        """Helper function to create the index mapping for the vector field.
+        see https://www.elastic.co/guide/en/elasticsearch/reference/8.13/semantic-search-elser.html#elser-mappings
+        """
+        return json.dumps({"mappings": {
+                                        "properties": {
+                                                f"{field}_embedding": {
+                                                    "type": "sparse_vector"
+                                                },
+                                                f"{field}": {
+                                                    "type": "text"
+                                                }
+                                        }}}
+                        )
+
+
+    def q_text_expansion(self, field: str = "" , query: str = ""):
+        """Helper function to format the query for semantic search.
+        see https://www.elastic.co/guide/en/elasticsearch/reference/8.13/semantic-search-elser.html#text-expansion-query
+        """
+        return json.dumps({"query": {
+                                        "text_expansion": {
+                                                f"{field}": {
+                                                    "model_id": ".elser_model_2",
+                                                    "model_text": f"{query}"
+                                                }
+                                        }}}
+                        )
