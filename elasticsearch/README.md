@@ -13,7 +13,7 @@ An Elasticsearch dagger module.
 
 Index a list of movies into a `movies` index
 ```sh
-dagger call index-bulk-data --data ./datasets/movies_bulk.json
+dagger call index-data --index="movies" --data ./datasets/movies.json
 ```
 
 Search
@@ -56,14 +56,11 @@ dagger call search --index="movies" --field="title" --query="Inception"
 
 
 **List of useful commands**
-```sh
-dagger call index-bulk-data --data ./datasets/blogs_bulk.json
-dagger call search --index="blogs" --field="title" --query="Elastic"
-```
+
 
 ```sh
 dagger call get --path="_cluster/health/movies?level=shards" | jq .
 ```
 ```sh
-dagger call delete --index="blogs"
+dagger call delete --index="movies"
 ```
