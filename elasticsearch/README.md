@@ -4,7 +4,7 @@ An Elasticsearch dagger module.
 
 **Pre-requisites**
 
-- Install dagger `brew install dagger` (or check the official doc)
+- Install dagger `brew install dagger` (or [check the official doc](https://docs.dagger.io/quickstart/729237/cli))
 - Have a container runtime running locally, like Docker Desktop
 
 ## Examples
