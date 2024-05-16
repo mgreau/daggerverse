@@ -20,7 +20,9 @@ jobs:
             curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=0.11.4 sh
             echo 'export PATH=$PATH:/usr/local/bin' >> $GITHUB_ENV
             dagger version
-      - name: Run the Dagger commands
+      - name: Run index-data
         run: |
             dagger call index-data --index="movies" --data ./datasets/movies.json
+      - name: Run search
+        run: |
             dagger call search --index="movies" --field="title" --query="Inception"
