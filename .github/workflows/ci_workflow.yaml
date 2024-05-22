@@ -7,22 +7,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v3
+      - name: ES - Index Data
+        uses: dagger/dagger-for-github@v5
         with:
-          python-version: "3.10"
-          architecture: "x64"
-      - name: Install dependencies
-        run: |
-            python -m pip install --upgrade pip
-            pip install -r requirements.txt
-      - name: Install Dagger
-        run: |
-            curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=0.11.4 sh
-            echo 'export PATH=$PATH:/usr/local/bin' >> $GITHUB_ENV
-            dagger version
-      - name: Run index-data
-        working-directory: elasticsearch
-        run: dagger call index-data --index="movies" --data ./datasets/movies.json
-      - name: Run search
-        run: dagger call search --index="movies" --field="title" --query="Inception"
+          verb: call 
+          module: github.com/mgreau/daggerverse/elasticsearch
+          args: index-data --index="movies" --data ./datasets/movies.json
+
+      - name: ES - Search
+        uses: dagger/dagger-for-github@v5
+        with:
+          verb: call 
+          module: github.com/mgreau/daggerverse/elasticsearch
+          args: search --index="movies" --field="title" --query="Inception"
