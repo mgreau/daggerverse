@@ -1,0 +1,22 @@
+name: Module test workflow
+on: [pull_request]
+jobs:
+  set-up:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: ES - Index Data
+        uses: dagger/dagger-for-github@v5
+        with:
+          verb: call 
+          module: github.com/mgreau/daggerverse/elasticsearch
+          args: semantic-search-index-data --index="company-policies" --data ./elasticsearch/datasets/data.json
+
+      - name: ES - Search
+        uses: dagger/dagger-for-github@v5
+        with:
+          verb: call 
+          module: github.com/mgreau/daggerverse/elasticsearch
+          args: semantic-search --index="company-policies" --query="what's our sales strategy for 2024?"
