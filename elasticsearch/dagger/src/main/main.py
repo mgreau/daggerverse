@@ -16,7 +16,7 @@ from dagger import dag, function, field, object_type
 class Elasticsearch:
 
     ctr: dagger.Container = dataclasses.field(init=False)
-    version: dataclasses.InitVar[str] = "8.13.2"
+    version: dataclasses.InitVar[str] = "8.14.1"
     java_opts: dataclasses.InitVar[str] = "-Xms4g -Xms4g"
 
     port: int = field(default=9200)
